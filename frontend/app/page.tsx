@@ -43,14 +43,21 @@ export default function Home() {
       const rooms = await response.json();
       setRooms(rooms);
 
+      console.log("Type de rooms:", typeof rooms, "Contenu de rooms:", rooms);
       // Load users for each room
-      rooms.forEach((room: any) => {
-        loadRoomUsers(room.id, token);
+      if (rooms && Array.isArray(rooms)) { // ou if (rooms && Array.isArray(rooms))
+          rooms.forEach((room: any) => {
+          loadRoomUsers(room.id, token);
       });
-    } catch (err) {
-      console.error('Failed to load rooms:', err);
-    }
-  };
+        } else {
+            console.error("Échec du chargement des rooms:", rooms);
+            // Ajoutez ici une logique pour gérer l'erreur, comme afficher un message à l'utilisateur.
+        }
+      }
+      catch (err) {
+            console.error('Failed to load rooms:', err);
+          }
+        };
 
   const loadRoomUsers = async (roomId: string, token: string) => {
     try {

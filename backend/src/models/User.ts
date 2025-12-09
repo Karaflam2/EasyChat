@@ -19,7 +19,8 @@ export class User extends Model {
   // Get user without sensitive data
   toJSON() {
     const user = super.toJSON();
-    delete (user as any).password;
+    // Use the `delete` operator on the result of `super.toJSON()`
+    delete (user as any).password; 
     return user;
   }
 }
@@ -35,7 +36,10 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      trim: true,
+      // Implement trim via a setter
+      set(value: string) {
+        this.setDataValue('username', value ? value.trim() : value);
+      },
       validate: {
         len: [3, 30],
       },
@@ -44,7 +48,10 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      lowercase: true,
+      // Implement lowercase via a setter
+      set(value: string) {
+        this.setDataValue('email', value ? value.toLowerCase() : value);
+      },
       validate: {
         isEmail: true,
       },
@@ -68,8 +75,16 @@ User.init(
     timestamps: true,
     hooks: {
       beforeCreate: async (user: User) => {
+        // Hash password before saving to the database
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(user.password, salt);
+      },
+      beforeUpdate: async (user: User) => {
+        // Only hash if the password has been modified (e.g., in a password change operation)
+        if (user.changed('password')) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
+        }
       },
     },
   }

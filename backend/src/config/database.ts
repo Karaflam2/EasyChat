@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const sequelize = new Sequelize(
-  process.env.DATABASE_URL || 'postgresql://dev:devpassword@localhost:5432/messaging_db',
+  process.env.DATABASE_URL || 'postgresql://postgres:1234@localhost:5432/messaging_db',
   {
     dialect: 'postgres',
     logging: false,

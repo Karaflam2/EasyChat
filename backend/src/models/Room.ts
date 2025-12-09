@@ -22,7 +22,10 @@ Room.init(
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
-      trim: true,
+      // FIX: Use a setter to manually trim the value before saving
+      set(value: string) {
+        this.setDataValue('name', value ? value.trim() : value);
+      },
       validate: {
         len: [2, 50],
       },
