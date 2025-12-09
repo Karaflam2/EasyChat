@@ -1,6 +1,5 @@
 {
   "scripts": {
-    "dev:all": "concurrently \"npm:dev:*\"",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run dev",
     "dev:socket": "cd socket-server && npm run dev",
