@@ -121,6 +121,7 @@ router.get('/:roomId/users', async (req: AuthRequest, res: Response) => {
       include: [
         {
           model: Room,
+          as: 'memberOf',
           where: { id: req.params.roomId },
           attributes: [],
           through: { attributes: [] },
