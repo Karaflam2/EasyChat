@@ -1,0 +1,15 @@
+{
+  "scripts": {
+    "dev:all": "concurrently \"npm:dev:*\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:socket": "cd socket-server && npm run dev",
+    "db:setup": "docker compose up -d && sleep 2 && cd backend && npx sequelize-cli db:migrate",
+    "db:seed": "cd backend && npx sequelize-cli db:seed:all",
+    "test": "concurrently \"npm:test:*\"",
+    "clean": "docker compose down && rm -rf */node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
