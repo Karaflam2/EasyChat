@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData, Message } from '../types';
 
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3001';
+
 /**
  * Gère les événements de messages: send
  */
@@ -8,13 +10,14 @@ export function handleMessageEvents(
   io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
   socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
   userId: string,
-  username: string
+  username: string,
+  authToken?: string
 ): void {
   /**
    * Événement: message:send
    * L'utilisateur envoie un message
    */
-  socket.on('message:send', (data) => {
+  socket.on('message:send', async (data) => {
     const { roomId, content } = data;
 
     console.log(`💬 ${username} sent message in room ${roomId}: "${content}"`);
@@ -27,20 +30,46 @@ export function handleMessageEvents(
       return;
     }
 
-    // Créer le message
-    const message: Message = {
-      id: generateMessageId(),
-      roomId,
-      userId,
-      username,
-      content,
-      createdAt: new Date(),
-    };
+    if (!authToken) {
+      socket.emit('error', { message: 'Missing authentication token' });
+      return;
+    }
 
-    // Émettre le message à tous les utilisateurs de la room
-    io.to(roomId).emit('message:new', message);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/rooms/${roomId}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({ content }),
+      });
 
-    console.log(`✅ Message sent to room ${roomId}`);
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => ({}));
+        const message = errorPayload.error || 'Unable to save message';
+        socket.emit('error', { message });
+        return;
+      }
+
+      const saved = (await response.json()) as Message & { username?: string };
+
+      const message: Message = {
+        id: saved.id,
+        roomId: saved.roomId,
+        userId: saved.userId,
+        username: saved.username || username,
+        content: saved.content,
+        createdAt: saved.createdAt ? new Date(saved.createdAt) : new Date(),
+      };
+
+      io.to(roomId).emit('message:new', message);
+
+      console.log(`✅ Message saved & sent to room ${roomId}`);
+    } catch (error) {
+      console.error('Error saving message', error);
+      socket.emit('error', { message: 'Server error while saving message' });
+    }
   });
 }
 

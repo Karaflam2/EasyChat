@@ -3,18 +3,78 @@ import { Plus, Search } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { joinRoom } from '@/lib/socket';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
 export const RoomList = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { rooms, currentRoomId, setCurrentRoom } = useChatStore();
+  const { rooms, currentRoomId, token, setCurrentRoom, setMessages, addRoom } = useChatStore();
 
   const filteredRooms = rooms.filter((room) =>
     room.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (room.description && room.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const fetchRoomMessages = async (roomId: string) => {
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_URL}/api/rooms/${roomId}/messages`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load messages');
+      }
+
+      const data = await response.json();
+      const mapped = data.map((msg: any) => ({
+        ...msg,
+        createdAt: new Date(msg.createdAt),
+      }));
+      setMessages(roomId, mapped);
+    } catch (error) {
+      console.error('Erreur lors du chargement des messages', error);
+    }
+  };
+
   const handleSelectRoom = (roomId: string) => {
     setCurrentRoom(roomId);
     joinRoom(roomId);
+    fetchRoomMessages(roomId);
+  };
+
+  const handleCreateRoom = async () => {
+    if (!token) return;
+
+    const name = prompt('Nom de la room ?');
+    if (!name || !name.trim()) return;
+
+    const description = prompt('Description (optionnel)') || '';
+
+    try {
+      const response = await fetch(`${API_URL}/api/rooms`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, description }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        alert(err.error || 'Impossible de créer la room');
+        return;
+      }
+
+      const room = await response.json();
+      addRoom(room);
+      setCurrentRoom(room.id);
+      joinRoom(room.id);
+      fetchRoomMessages(room.id);
+    } catch (error) {
+      console.error('Erreur lors de la création de room', error);
+    }
   };
 
   return (
@@ -60,7 +120,10 @@ export const RoomList = () => {
 
       {/* Create Room Button */}
       <div className="p-4 border-t-2 border-purple-300 bg-white">
-        <button className="w-full bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-105 border-2 border-cyan-500">
+        <button
+          onClick={handleCreateRoom}
+          className="w-full bg-cyan-400 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition transform hover:scale-105 border-2 border-cyan-500"
+        >
           <Plus size={20} /> New Room
         </button>
       </div>

@@ -3,7 +3,7 @@ import { useChatStore } from '@/store/chatStore';
 
 let socket: Socket | null = null;
 
-export const initSocket = (userId: string, username: string): Socket => {
+export const initSocket = (userId: string, username: string, token?: string): Socket => {
   if (socket) {
     return socket;
   }
@@ -12,6 +12,7 @@ export const initSocket = (userId: string, username: string): Socket => {
     query: {
       userId,
       username,
+      token,
     },
   });
 
@@ -23,7 +24,13 @@ export const initSocket = (userId: string, username: string): Socket => {
     useChatStore.setState((state) => ({
       messages: {
         ...state.messages,
-        [message.roomId]: [...(state.messages[message.roomId] || []), message],
+        [message.roomId]: [
+          ...(state.messages[message.roomId] || []),
+          {
+            ...message,
+            createdAt: new Date(message.createdAt),
+          },
+        ],
       },
     }));
   });

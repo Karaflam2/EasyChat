@@ -106,10 +106,56 @@ router.get('/:roomId/messages', async (req: AuthRequest, res: Response) => {
       offset: parseInt(offset as string),
     });
 
-    res.json(messages);
+    const payload = messages.map((msg) => {
+      const plain = msg.toJSON() as any;
+      return {
+        ...plain,
+        username: plain.User?.username,
+      };
+    });
+
+    res.json(payload);
   } catch (error) {
     console.error('Get messages error:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// Create message in a room
+router.post('/:roomId/messages', authMiddleware, async (req: AuthRequest, res: Response) => {
+  try {
+    const { content } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Message content required' });
+    }
+
+    const room = await Room.findByPk(req.params.roomId);
+
+    if (!room) {
+      return res.status(404).json({ error: 'Room not found' });
+    }
+
+    const user = await User.findByPk(userId, { attributes: ['id', 'username', 'email'] });
+
+    const message = await Message.create({
+      roomId: req.params.roomId,
+      userId,
+      content: content.trim(),
+    });
+
+    res.status(201).json({
+      ...message.toJSON(),
+      username: user?.username,
+    });
+  } catch (error) {
+    console.error('Create message error:', error);
+    res.status(500).json({ error: 'Failed to create message' });
   }
 });
 

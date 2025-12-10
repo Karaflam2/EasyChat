@@ -27,11 +27,12 @@ export default function Home() {
     const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (savedToken && savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      setCurrentUser(parsedUser);
       setToken(savedToken);
       setView('chat');
       loadRooms(savedToken);
-      initSocket(JSON.parse(savedUser).id, JSON.parse(savedUser).username);
+      initSocket(parsedUser.id, parsedUser.username, savedToken);
     }
   }, []);
 
@@ -99,7 +100,7 @@ export default function Home() {
       setCurrentUser(data.user);
       setToken(data.token);
       
-      initSocket(data.user.id, data.user.username);
+      initSocket(data.user.id, data.user.username, data.token);
       await loadRooms(data.token);
       
       setView('chat');

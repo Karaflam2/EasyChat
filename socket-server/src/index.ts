@@ -34,6 +34,7 @@ const typingUsers = new Map<string, Set<string>>();
 io.on('connection', (socket) => {
   const userId = socket.handshake.query.userId as string;
   const username = socket.handshake.query.username as string;
+  const token = socket.handshake.query.token as string | undefined;
 
   console.log(`✅ User connected: ${username} (${socket.id})`);
 
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
   // ============================================
   // Gérer les événements de messages
   // ============================================
-  handleMessageEvents(io, socket, userId, username);
+  handleMessageEvents(io, socket, userId, username, token);
 
   // ============================================
   // Gérer les événements de typing
@@ -73,6 +74,21 @@ io.on('connection', (socket) => {
 
       // Nettoyer le typing
       cleanupTyping(userRooms);
+
+      // Retirer l'utilisateur de toutes les rooms et notifier
+      userRooms.forEach((roomId) => {
+        roomManager.removeUserFromRoom(roomId, userId);
+
+        const roomUsers = roomManager.getRoomUsers(roomId);
+        io.to(roomId).emit('user:left', {
+          roomId,
+          user: {
+            userId,
+            username,
+          },
+          users: roomUsers,
+        });
+      });
 
       // Retirer des utilisateurs connectés
       connectedUsers.delete(socket.id);
