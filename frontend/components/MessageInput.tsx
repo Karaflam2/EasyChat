@@ -33,6 +33,7 @@ export const MessageInput = () => {
   const handleSend = () => {
     if (input.trim() && currentRoomId) {
       sendMessage(currentRoomId, input);
+      stopTyping(currentRoomId);
       setInput('');
       setIsTyping(false);
       if (typingTimeoutRef.current) {
@@ -53,8 +54,11 @@ export const MessageInput = () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
+      if (isTyping && currentRoomId) {
+        stopTyping(currentRoomId);
+      }
     };
-  }, []);
+  }, [isTyping, currentRoomId]);
 
   return (
     <div className="bg-gradient-to-r from-green-300 to-cyan-300 p-4 border-t-4 border-green-400">

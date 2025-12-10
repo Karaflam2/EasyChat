@@ -13,7 +13,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: [ 'http://172.20.10.5:3000', 'http://localhost:3000' ],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
   // ============================================
   // Gérer les événements utilisateur
   // ============================================
-  handleUserEvents(io, socket, roomManager, userId, username);
+  handleUserEvents(io, socket, roomManager, userId, username, typingUsers);
 
   // ============================================
   // Gérer les événements de messages

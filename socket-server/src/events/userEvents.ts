@@ -10,7 +10,8 @@ export function handleUserEvents(
   socket: Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>,
   roomManager: RoomManager,
   userId: string,
-  username: string
+  username: string,
+  typingUsers: Map<string, Set<string>>
 ): void {
   /**
    * Événement: user:join
@@ -59,6 +60,21 @@ export function handleUserEvents(
 
     // Quitter le canal Socket.IO de la room
     socket.leave(roomId);
+
+    // Nettoyer le typing pour cette room
+    if (typingUsers.has(roomId)) {
+      typingUsers.get(roomId)!.delete(username);
+
+      if (typingUsers.get(roomId)!.size === 0) {
+        typingUsers.delete(roomId);
+      } else {
+        const typingList = Array.from(typingUsers.get(roomId)!);
+        io.to(roomId).emit('user:typing-updated', {
+          roomId,
+          typingUsers: typingList,
+        });
+      }
+    }
 
     // Récupérer les utilisateurs restants de la room
     const roomUsers = roomManager.getRoomUsers(roomId);

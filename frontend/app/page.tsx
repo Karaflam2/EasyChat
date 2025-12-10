@@ -9,7 +9,7 @@ import { MessageInput } from '@/components/MessageInput';
 import { RoomList } from '@/components/RoomList';
 import { UserList } from '@/components/UserList';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://172.20.10.5:3001' || 'http://localhost:3001';
 
 export default function Home() {
   const [view, setView] = useState<'login' | 'chat'>('login');

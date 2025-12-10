@@ -35,6 +35,12 @@ export function handleMessageEvents(
       return;
     }
 
+    if (typeof fetch === 'undefined') {
+      socket.emit('error', { message: 'Fetch API not available on server runtime' });
+      console.error('Fetch API not available. Use Node 18+ or add a fetch polyfill.');
+      return;
+    }
+
     try {
       const response = await fetch(`${BACKEND_URL}/api/rooms/${roomId}/messages`, {
         method: 'POST',

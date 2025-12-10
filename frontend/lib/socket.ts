@@ -8,7 +8,7 @@ export const initSocket = (userId: string, username: string, token?: string): So
     return socket;
   }
 
-  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3002', {
+  socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://172.20.10.5:3002' || 'http://localhost:3002', {
     query: {
       userId,
       username,
@@ -71,6 +71,10 @@ export const initSocket = (userId: string, username: string, token?: string): So
         ),
       },
     }));
+  });
+
+  socket.on('error', (data) => {
+    console.error('Socket error:', data);
   });
 
   socket.on('disconnect', () => {

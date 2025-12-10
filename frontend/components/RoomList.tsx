@@ -3,7 +3,7 @@ import { Plus, Search } from 'lucide-react';
 import { useChatStore } from '@/store/chatStore';
 import { joinRoom } from '@/lib/socket';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://172.20.10.5:3001' || 'http://localhost:3001';
 
 export const RoomList = () => {
   const [searchQuery, setSearchQuery] = useState('');
